@@ -78,3 +78,20 @@ def divide_by_id(df):
         csv_file_path = os.path.join(folder_path, csv_file_name)
         # 将DataFrame保存到CSV文件中
         sub_df.to_csv(csv_file_path, index=False)
+
+
+def time_resampling(df):
+    df['time'] = pd.to_datetime(df['time'])
+    result = df.groupby('id').apply(lambda x: x.resample('D', on='time').mean())
+    result = result.reset_index(drop=False)
+    folder_name ="time_resampling"
+    current_directory = os.getcwd()
+    # 构造子文件夹的完整路径
+    folder_path = os.path.join(current_directory, folder_name)
+    # 如果子文件夹不存在，则创建它
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    # 定义CSV文件的名称
+    csv_file_name = 'time_resamping_sparse_matrix_data.csv'
+    csv_file_path = os.path.join(folder_path, csv_file_name)
+    result.to_csv(csv_file_path, index=False)
