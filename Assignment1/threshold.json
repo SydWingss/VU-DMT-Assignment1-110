@@ -1,0 +1,122 @@
+{
+  "time": {
+    "description": "Timestamp in the format 'YYYY-MM-DD HH:MM:SS.FFF'",
+    "type": "string",
+    "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}$"
+  },
+  "variable": {
+    "mood": {
+      "description": "The mood scored by the user on a scale of 1-10",
+      "type": "int",
+      "range": [
+        1,
+        10
+      ]
+    },
+    "circumplex.arousal": {
+      "description": "The arousal scored by the user, on a scale between -2 to 2",
+      "type": "int",
+      "range": [
+        -2,
+        2
+      ]
+    },
+    "circumplex.valence": {
+      "description": "The valence scored by the user, on a scale between -2 to 2",
+      "type": "int",
+      "range": [
+        -2,
+        2
+      ]
+    },
+    "activity": {
+      "description": "Activity score of the user (number between 0 and 1)",
+      "type": "float",
+      "range": [
+        0,
+        1
+      ]
+    },
+    "screen": {
+      "description": "Duration of screen activity (time)",
+      "type": "float",
+      "range": null
+    },
+    "call": {
+      "description": "Call made (indicated by a 1)",
+      "type": "int",
+      "range": [
+        0,
+        1
+      ]
+    },
+    "sms": {
+      "description": "SMS sent (indicated by a 1)",
+      "type": "int",
+      "range": [
+        0,
+        1
+      ]
+    },
+    "appCat.builtin": {
+      "description": "Duration of usage of builtin apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.communication": {
+      "description": "Duration of usage of communication apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.entertainment": {
+      "description": "Duration of usage of entertainment apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.finance": {
+      "description": "Duration of usage of finance apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.game": {
+      "description": "Duration of usage of game apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.office": {
+      "description": "Duration of usage of office apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.other": {
+      "description": "Duration of usage of other apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.social": {
+      "description": "Duration of usage of social apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.travel": {
+      "description": "Duration of usage of travel apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.unknown": {
+      "description": "Duration of usage of unknown apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.utilities": {
+      "description": "Duration of usage of utilities apps (time)",
+      "type": "float",
+      "range": null
+    },
+    "appCat.weather": {
+      "description": "Duration of usage of weather apps (time)",
+      "type": "float",
+      "range": null
+    }
+  }
+}
