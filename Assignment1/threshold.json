@@ -40,7 +40,10 @@
     "screen": {
       "description": "Duration of screen activity (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "call": {
       "description": "Call made (indicated by a 1)",
@@ -61,62 +64,98 @@
     "appCat.builtin": {
       "description": "Duration of usage of builtin apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.communication": {
       "description": "Duration of usage of communication apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.entertainment": {
       "description": "Duration of usage of entertainment apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.finance": {
       "description": "Duration of usage of finance apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.game": {
       "description": "Duration of usage of game apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.office": {
       "description": "Duration of usage of office apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.other": {
       "description": "Duration of usage of other apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.social": {
       "description": "Duration of usage of social apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.travel": {
       "description": "Duration of usage of travel apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.unknown": {
       "description": "Duration of usage of unknown apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.utilities": {
       "description": "Duration of usage of utilities apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     },
     "appCat.weather": {
       "description": "Duration of usage of weather apps (time)",
       "type": "float",
-      "range": null
+      "range": [
+        0,
+        100000
+      ]
     }
   }
 }
