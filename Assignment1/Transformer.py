@@ -43,7 +43,7 @@ class Data_loader:
         self.train_loader = None
         self.test_loader = None
         
-    def data_preparation(self):
+    def data_preparation(self, batch_size=32):
         # Group by id
         grouped = self.df.groupby('id')
 
@@ -73,8 +73,8 @@ class Data_loader:
         # Create data loaders
         train_dataset = MoodDataset(train_features_1, train_features_2, train_labels)
         test_dataset = MoodDataset(test_features_1, test_features_2, test_labels)
-        train_loader = DataLoader(train_dataset, batch_size=32, shuffle=False)
-        test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
         num_features = features_1.shape[1]
         
@@ -145,19 +145,22 @@ class Tester:
 
 
 if __name__ == '__main__':
-    # Load data
-    df = pd.read_csv('Assignment1/time_resampling/featured_time_resamping_sparse_matrix_data.csv')
-    data_loader = Data_loader(df)
-    train_loader, test_loader, num_features = data_loader.data_preparation()
-    
     # Check if GPU is available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    # Define hyperparameters
+    criterion = nn.MSELoss()
+    lr = 1e-5
+    epoch = 200
+    batch_size = 128
+    
+    # Load data
+    df = pd.read_csv('Assignment1/time_resampling/featured_time_resamping_sparse_matrix_data.csv')
+    data_loader = Data_loader(df)
+    train_loader, test_loader, num_features = data_loader.data_preparation(batch_size)
+    
     # Define model
     model = TransformerModel(d_model=num_features)
-    criterion = nn.MSELoss()
-    lr = 0.00001
-    epoch = 50
     
     trainer = Trainer(model, device, criterion, lr, epoch)
     model = trainer.train(train_loader)
