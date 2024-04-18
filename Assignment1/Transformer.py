@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from torch.optim import AdamW
 from rich.progress import Progress
@@ -64,11 +63,6 @@ class Data_loader:
         # Split into training and test sets
         train_features_1, test_features_1, train_features_2, test_features_2, train_labels, test_labels = train_test_split(features_1.values, features_2.values, labels.values, test_size=0.2, shuffle=False)
         train_features_1, test_features_1, train_features_2, test_features_2, train_labels, test_labels = train_features_1.astype(np.float32), test_features_1.astype(np.float32), train_features_2.astype(np.float32), test_features_2.astype(np.float32), train_labels.astype(np.float32), test_labels.astype(np.float32)
-
-        # Standardize features
-        # scaler = StandardScaler()
-        # train_features = scaler.fit_transform(train_features)
-        # test_features = scaler.transform(test_features)
 
         # Create data loaders
         train_dataset = MoodDataset(train_features_1, train_features_2, train_labels)
