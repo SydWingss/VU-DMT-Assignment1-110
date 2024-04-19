@@ -28,7 +28,7 @@ class MoodDataset(Dataset):
 class TransformerModel(nn.Module):
     def __init__(self, d_model):
         super(TransformerModel, self).__init__()
-        self.transformer = nn.Transformer(d_model=d_model, nhead=1)
+        self.transformer = nn.Transformer(d_model=d_model, nhead=7, batch_first=True, dropout=0.1)
         self.fc = nn.Linear(d_model, 1)
 
     def forward(self, src, tgt):
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     # Define hyperparameters
     criterion = nn.MSELoss()
     lr = 1e-5
-    epoch = 200
+    epoch = 500
     batch_size = 128
     
     # Load data
