@@ -84,7 +84,7 @@ def divide_by_id(df):
 def time_resampling(df):
     df['time'] = pd.to_datetime(df['time'])
     df.set_index('time', inplace=True)
-    result = df.groupby('id').apply(lambda x: x.resample('D').agg({'mood_level':'first', 'mood':'mean', 'circumplex.arousal':'mean', 'circumplex.valence':'mean', 'activity':'mean', 'screen':'mean', 'call':'mean', 'sms':'mean', 'appCat.builtin':'mean', 'appCat.communication':'mean', 'appCat.entertainment':'mean', 'appCat.finance':'mean', 'appCat.game':'mean', 'appCat.office':'mean', 'appCat.other':'mean', 'appCat.social':'mean', 'appCat.travel':'mean', 'appCat.unknown':'mean', 'appCat.utilities':'mean', 'appCat.weather':'mean'}))
+    result = df.groupby('id').apply(lambda x: x.select_dtypes(include=[np.number]).resample('D').mean())
     result = result.reset_index(drop=False)
     folder_name ="time_resampling"
     current_directory = os.getcwd()
@@ -126,3 +126,20 @@ def clean_raw(data, data_schema):
     print(len(invalid_rows))
     print("invalid row id:", invalid_rows)
     print("error types:", error_types)
+    
+def add_mood_level(df):
+    low_boundary = 6
+    high_boundary = 8
+    # Create a new column 'mood_level'
+    df['mood_level'] = 'low'
+    df.loc[df['mood'] > low_boundary, 'mood_level'] = 'medium'
+    df.loc[df['mood'] > high_boundary, 'mood_level'] = 'high'
+    folder_name ="time_resampling"
+    current_directory = os.getcwd()
+    folder_path = os.path.join(current_directory, folder_name)
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    csv_file_name = 'time_resamping_with_moodlevel.csv'
+    csv_file_path = os.path.join(folder_path, csv_file_name)
+    df.to_csv(csv_file_path, index=False)
+    
