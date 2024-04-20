@@ -6,6 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from torch.optim import AdamW
 from rich.progress import Progress
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 # Define dataset
 class MoodDataset(Dataset):
@@ -88,6 +89,7 @@ class Trainer:
         self.model.train()
         with Progress() as progress:
             task = progress.add_task("[cyan]Training...", total=self.epoch)
+            print('\nStart training...')
             for i in range(self.epoch):
                 total_loss = 0
                 total_correct = 0
@@ -123,18 +125,26 @@ class Tester:
         # Test model
         correct = 0
         total = 0
+        all_preds = []
+        all_labels = []
+        print('\nStart testing...')
         with torch.no_grad():
             for i, (features_1, features_2, labels) in enumerate(test_loader):
                 features_1, features_2, labels = features_1.float().to(self.device), features_2.float().to(self.device), labels.float().to(self.device)
                 outputs = self.model(features_1, features_2).squeeze()
                 total += labels.size(0)
                 correct += sum([1 for i in range(len(outputs)) if abs(outputs[i] - labels[i]) < 0.1])
+                all_preds.extend(outputs.cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())
         
-        print('Accuracy: %d %%' % (100 * correct / total))
+        mae = mean_absolute_error(all_labels, all_preds)
+        mse = mean_squared_error(all_labels, all_preds)
+        print('Accuracy: %d %%' % (100 * correct / total), 'MAE:', mae, 'MSE:', mse)
             
     def load_model(self, path):
         # Load model
         self.model.load_state_dict(torch.load(path))
+        self.model.to(self.device)
         self.model.eval()
 
 
@@ -156,12 +166,17 @@ if __name__ == '__main__':
     # Define model
     model = TransformerModel(d_model=num_features)
     
-    trainer = Trainer(model, device, criterion, lr, epoch)
-    model = trainer.train(train_loader)
-    trainer.save_model('Assignment1/pytorch_model.bin')
+    # trainer = Trainer(model, device, criterion, lr, epoch)
+    # model = trainer.train(train_loader)
+    # trainer.save_model('Assignment1/pytorch_model.bin')
     
     # Test model
-    tester = Tester(model, device)
-    tester.load_model('Assignment1/pytorch_model.bin')
-    tester.test(test_loader)
+    # tester = Tester(model, device)
+    # tester.load_model('Assignment1/pytorch_model.bin')
+    # tester.test(test_loader)
+    
+    
+    tester_best = Tester(model, device)
+    tester_best.load_model('Assignment1/pytorch_model_best.bin')
+    tester_best.test(test_loader)
     
