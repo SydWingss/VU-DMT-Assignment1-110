@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import re
 
 def divide_by_variable(df):
     folder_name = 'divide_by_variable'
@@ -95,3 +96,35 @@ def time_resampling(df):
     csv_file_name = 'time_resamping_sparse_matrix_data.csv'
     csv_file_path = os.path.join(folder_path, csv_file_name)
     result.to_csv(csv_file_path, index=False)
+    
+def clean_raw(data, data_schema):
+    invalid_rows = []
+    error_types = []
+    for index, row in data.iterrows():
+        # 检查时间是否符合规定
+        if not re.match(data_schema["time"]["pattern"], row["time"]):
+            invalid_rows.append(index + 1)
+            error_types.append("wrong_time")
+            continue
+
+        # 检查变量是否符合规定
+        variable = row["variable"]
+        value = row["value"]
+        if variable in data_schema["variable"]:
+            var_schema = data_schema["variable"][variable]
+            if var_schema["range"] is not None:
+                min_value, max_value = var_schema["range"]
+                if not min_value <= value <= max_value:
+                    if pd.isnull(value):
+                        invalid_rows.append(index + 1)
+                        error_types.append("missing_value")
+                    else:
+                        invalid_rows.append(index + 1)
+                        error_types.append("out_of_range")
+        else:
+            invalid_rows.append(index + 1)
+            error_types.append("missing_variable")
+
+    print(len(invalid_rows))
+    print("invalid row id:", invalid_rows)
+    print("error types:", error_types)
