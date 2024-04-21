@@ -167,6 +167,16 @@ def fill_default_value_and_add_mood_level(df):
         os.makedirs(folder_path)
     csv_file_name = 'time_resamping_with_moodlevel.csv'
     csv_file_path = os.path.join(folder_path, csv_file_name)
+    
+            # 获取列的列表
+    cols = list(df_filled.columns)
+    # 移除'mood'
+    cols.remove('mood')
+    # 在第2列的位置插入'mood'
+    cols.insert(1, 'mood')
+    # 重新索引DataFrame
+    df_filled = df_filled.reindex(columns=cols)
+    
     df_filled.reset_index().to_csv(csv_file_path, index=False)
     
     
