@@ -25,7 +25,7 @@ class MoodDataset(Dataset):
         features_1 = torch.from_numpy(self.features_1[idx]).float()
         features_2 = torch.from_numpy(self.features_2[idx]).float()
         labels_1 = torch.from_numpy(np.array(self.labels_1[idx])).float()
-        labels_2 = torch.from_numpy(np.array(self.labels_2[idx])).float()
+        labels_2 = torch.from_numpy(np.array(self.labels_2[idx])).long()
         return features_1, features_2, labels_1, labels_2
 
 # Define model
@@ -39,14 +39,14 @@ class TransformerModel(nn.Module):
         elif self.task == 'classification':
             self.fc = nn.Linear(d_model, 3)
 
-
     def forward(self, src, tgt):
         x = self.transformer(src, tgt)
         x = self.fc(x)
-        if self.task == 'regression':
-            return x
-        elif self.task == 'classification':
-            return F.softmax(x, dim=-1)
+        return x
+        # if self.task == 'regression':
+        #     return x
+        # elif self.task == 'classification':
+        #     return F.softmax(x, dim=-1)
 
 class Data_loader:
     def __init__(self, df):
@@ -60,10 +60,10 @@ class Data_loader:
 
         features_1, features_2, labels_1, labels_2 = pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
         for _, group in grouped:
-            feature_1 = group.drop(['id', 'time', 'mood_type'], axis=1)
-            feature_2 = group.drop(['id', 'time', 'mood_type'], axis=1)
+            feature_1 = group.drop(['id', 'time', 'mood_level'], axis=1)
+            feature_2 = group.drop(['id', 'time', 'mood_level'], axis=1)
             label_1 = group['mood']
-            label_2 = group['mood_type']   
+            label_2 = group['mood_level']   
 
             feature_1 = feature_1.iloc[:-1].reset_index(drop=True)
             feature_2 = feature_2.iloc[1:].reset_index(drop=True)
@@ -77,7 +77,7 @@ class Data_loader:
 
         # Split into training and test sets
         train_features_1, test_features_1, train_features_2, test_features_2, train_labels_1, test_labels_1, train_labels_2, test_labels_2 = train_test_split(features_1.values, features_2.values, labels_1.values, labels_2.values, test_size=0.2, shuffle=False)
-        train_features_1, test_features_1, train_features_2, test_features_2, train_labels_1, test_labels_1, train_labels_2, test_labels_2 = train_features_1.astype(np.float32), test_features_1.astype(np.float32), train_features_2.astype(np.float32), test_features_2.astype(np.float32), train_labels_1.astype(np.float32), test_labels_1.astype(np.float32), train_labels_2.astype(np.float32), test_labels_2.astype(np.float32)
+        train_features_1, test_features_1, train_features_2, test_features_2, train_labels_1, test_labels_1, train_labels_2, test_labels_2 = train_features_1.astype(np.float32), test_features_1.astype(np.float32), train_features_2.astype(np.float32), test_features_2.astype(np.float32), train_labels_1.astype(np.float32), test_labels_1.astype(np.float32), train_labels_2.astype(np.int_), test_labels_2.astype(np.int_)
 
         # Create data loaders
         train_dataset = MoodDataset(train_features_1, train_features_2, train_labels_1, train_labels_2)
@@ -110,7 +110,7 @@ class Trainer:
                 total_correct = 0
                 total_count = 0
                 for features_1, features_2, labels_1, labels_2 in train_loader:
-                    features_1, features_2, labels_1, labels_2 = features_1.float().to(self.device), features_2.float().to(self.device), labels_1.float().squeeze().to(self.device), labels_2.float().squeeze().to(self.device)
+                    features_1, features_2, labels_1, labels_2 = features_1.float().to(self.device), features_2.float().to(self.device), labels_1.long().squeeze().to(self.device), labels_2.long().squeeze().to(self.device)
                     self.optimizer.zero_grad()
                     outputs = self.model(features_1, features_2).squeeze()
                     if self.task == 'regression':
@@ -125,7 +125,9 @@ class Trainer:
                         # outputs和labels为list，若outputs和labels中的一项的差值小于0.1，则认为这一项预测正确
                         total_correct += sum([1 for i in range(len(outputs)) if abs(outputs[i] - labels_1[i]) < 0.1])
                     elif self.task == 'classification':
-                        total_correct += sum([1 for i in range(len(outputs)) if outputs[i] == labels_2[i]])
+                        preds = F.softmax(outputs, dim=-1)
+                        total_correct += sum([1 for i in range(len(outputs)) if preds[i].argmax() == labels_2[i]])                        
+                        
                     total_count += outputs.size(0)
                     
                 # Print loss and accuracy for each epoch
@@ -152,16 +154,18 @@ class Tester:
         print('\nStart testing...')
         with torch.no_grad():
             for i, (features_1, features_2, labels_1, labels_2) in enumerate(test_loader):
-                features_1, features_2, labels_1, labels_2 = features_1.float().to(self.device), features_2.float().to(self.device), labels_1.float().to(self.device), labels_2.float().to(self.device)
+                features_1, features_2, labels_1, labels_2 = features_1.float().to(self.device), features_2.float().to(self.device), labels_1.float().to(self.device), labels_2.int().to(self.device)
                 outputs = self.model(features_1, features_2).squeeze()
                 total += labels_1.size(0)
                 if self.task == 'regression':
                     correct += sum([1 for i in range(len(outputs)) if abs(outputs[i] - labels_1[i]) < 0.1])
                     all_labels.extend(labels_1.cpu().numpy())
+                    all_preds.extend(outputs.cpu().numpy())
                 elif self.task == 'classification':
-                    correct += sum([1 for i in range(len(outputs)) if outputs[i] == labels_2[i]])
+                    preds = F.softmax(outputs, dim=-1)
+                    correct += sum([1 for i in range(len(outputs)) if preds[i].argmax() == labels_2[i]])
                     all_labels.extend(labels_2.cpu().numpy())
-                all_preds.extend(outputs.cpu().numpy())
+                    all_preds.extend(preds.argmax(dim=1).cpu().numpy())
         
         if self.task == 'regression':
             mae = mean_absolute_error(all_labels, all_preds)
@@ -169,7 +173,7 @@ class Tester:
             print('Accuracy: %d %%' % (100 * correct / total), 'MAE:', mae, 'MSE:', mse)
         elif self.task == 'classification':
             f1 = f1_score(all_labels, all_preds, average='macro')  # Calculate F1 score
-            print('Accuracy: %d %%' % (100 * correct / total), 'F1 Score:', f1)
+            print('Accuracy: %d%%' % (100 * correct / total), ',F1 Score:', f1)
             
     def load_model(self, path):
         # Load model
@@ -177,7 +181,7 @@ class Tester:
         self.model.to(self.device)
         self.model.eval()
 
-def Run_task(task, lr=1e-5, epoch=500, batch_size=128):
+def Run_task(task, lr=1e-7, epoch=500, batch_size=128):
     # Check if GPU is available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -188,7 +192,7 @@ def Run_task(task, lr=1e-5, epoch=500, batch_size=128):
         criterion = nn.CrossEntropyLoss()
     
     # Load data
-    df = pd.read_csv('Assignment1/time_resampling/featured_time_resamping_sparse_matrix_data.csv')
+    df = pd.read_csv('Assignment1/time_resampling/featured_time_resamping_with_moodlevel.csv')
     data_loader = Data_loader(df)
     train_loader, test_loader, num_features = data_loader.data_preparation(batch_size)
     
@@ -205,5 +209,35 @@ def Run_task(task, lr=1e-5, epoch=500, batch_size=128):
     tester.test(test_loader)
 
 if __name__ == '__main__':
-    Run_task('regression')
-    Run_task('classification')
+    # Run_task('regression', lr=1e-5, epoch=500, batch_size=128)
+    Run_task('classification', lr=1e-5, epoch=500, batch_size=32)
+    
+    
+    
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # task = 'classification'
+    
+    # # Define hyperparameters
+    # if task == 'regression':
+    #     criterion = nn.MSELoss()
+    # elif task == 'classification':
+    #     criterion = nn.CrossEntropyLoss()
+    
+    # # Load data
+    # df = pd.read_csv('Assignment1/time_resampling/featured_time_resamping_with_moodlevel.csv')
+    # data_loader = Data_loader(df)
+    # train_loader, test_loader, num_features = data_loader.data_preparation(128)
+    
+    # # Define model
+    # model = TransformerModel(task=task, d_model=num_features)
+    
+    # # trainer = Trainer(task, model, device, criterion, lr, epoch)
+    # # model = trainer.train(train_loader)
+    # # trainer.save_model('Assignment1/pytorch_model_'+str(task)+'.bin')
+    
+    # # Test model
+    # tester = Tester(task, model, device)
+    # tester.load_model('Assignment1/pytorch_model_'+str(task)+'.bin')
+    # tester.test(test_loader)
+    
