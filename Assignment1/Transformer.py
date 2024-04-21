@@ -33,7 +33,7 @@ class TransformerModel(nn.Module):
     def __init__(self, task, d_model):
         super(TransformerModel, self).__init__()
         self.task = task
-        self.transformer = nn.Transformer(d_model=d_model, nhead=7, batch_first=True, dropout=0.1)
+        self.transformer = nn.Transformer(d_model=d_model, nhead=2, batch_first=True, dropout=0.1)
         if self.task == 'regression':
             self.fc = nn.Linear(d_model, 1)
         elif self.task == 'classification':
@@ -60,8 +60,10 @@ class Data_loader:
 
         features_1, features_2, labels_1, labels_2 = pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
         for _, group in grouped:
-            feature_1 = group.drop(['id', 'time', 'mood_level'], axis=1)
-            feature_2 = group.drop(['id', 'time', 'mood_level'], axis=1)
+            feature_1 = group.drop(['id', 'time', 'mood_level', 'mood'], axis=1)
+            feature_2 = group.drop(['id', 'time', 'mood_level', 'mood'], axis=1)
+            # feature_1 = group.drop(['id', 'time'], axis=1)
+            # feature_2 = group.drop(['id', 'time'], axis=1)
             label_1 = group['mood']
             label_2 = group['mood_level']   
 
@@ -110,7 +112,7 @@ class Trainer:
                 total_correct = 0
                 total_count = 0
                 for features_1, features_2, labels_1, labels_2 in train_loader:
-                    features_1, features_2, labels_1, labels_2 = features_1.float().to(self.device), features_2.float().to(self.device), labels_1.long().squeeze().to(self.device), labels_2.long().squeeze().to(self.device)
+                    features_1, features_2, labels_1, labels_2 = features_1.float().to(self.device), features_2.float().to(self.device), labels_1.float().squeeze().to(self.device), labels_2.long().squeeze().to(self.device)
                     self.optimizer.zero_grad()
                     outputs = self.model(features_1, features_2).squeeze()
                     if self.task == 'regression':
@@ -209,35 +211,6 @@ def Run_task(task, lr=1e-7, epoch=500, batch_size=128):
     tester.test(test_loader)
 
 if __name__ == '__main__':
-    # Run_task('regression', lr=1e-5, epoch=500, batch_size=128)
+    Run_task('regression', lr=1e-5, epoch=500, batch_size=128)
     Run_task('classification', lr=1e-5, epoch=500, batch_size=32)
-    
-    
-    
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # task = 'classification'
-    
-    # # Define hyperparameters
-    # if task == 'regression':
-    #     criterion = nn.MSELoss()
-    # elif task == 'classification':
-    #     criterion = nn.CrossEntropyLoss()
-    
-    # # Load data
-    # df = pd.read_csv('Assignment1/time_resampling/featured_time_resamping_with_moodlevel.csv')
-    # data_loader = Data_loader(df)
-    # train_loader, test_loader, num_features = data_loader.data_preparation(128)
-    
-    # # Define model
-    # model = TransformerModel(task=task, d_model=num_features)
-    
-    # # trainer = Trainer(task, model, device, criterion, lr, epoch)
-    # # model = trainer.train(train_loader)
-    # # trainer.save_model('Assignment1/pytorch_model_'+str(task)+'.bin')
-    
-    # # Test model
-    # tester = Tester(task, model, device)
-    # tester.load_model('Assignment1/pytorch_model_'+str(task)+'.bin')
-    # tester.test(test_loader)
-    
+  
