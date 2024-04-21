@@ -127,13 +127,39 @@ def clean_raw(data, data_schema):
     print("invalid row id:", invalid_rows)
     print("error types:", error_types)
     
-def add_mood_level(df):
+def fill_default_value_and_add_mood_level(df):
+    
+    df['time'] = pd.to_datetime(df['time'])
+    df.set_index('time', inplace=True)
+    df_filled = pd.DataFrame()
+    columns = ['mood']
+    for id, group in df.groupby('id'):
+        # 为每个id的数据填充缺失值
+        group_rolling = group[columns].rolling('5D').mean()
+        group_filled = group[columns].where(group[columns].notna(), group_rolling)
+        group_filled.fillna(group[columns].mean(), inplace=True)
+
+  
+        # 将填充后的数据与原始数据合并
+        group = group.drop(columns, axis=1)
+        group = pd.concat([group, group_filled], axis=1)
+  
+        # 重置索引，将'time'列变为普通列
+        group.reset_index(inplace=True)
+        # 将'id'列添加到组中，并将其设置为索引
+        group['id'] = id
+        group.set_index('id', inplace=True)
+    
+        # 将处理过的组添加到结果DataFrame中
+        df_filled = pd.concat([df_filled, group])
+    
     low_boundary = 6
     high_boundary = 8
     # Create a new column 'mood_level'
-    df['mood_level'] = 'low'
-    df.loc[df['mood'] > low_boundary, 'mood_level'] = 'medium'
-    df.loc[df['mood'] > high_boundary, 'mood_level'] = 'high'
+    df_filled.loc[df_filled["mood"]<=low_boundary,'mood_level'] = 'low'
+    df_filled.loc[(df_filled['mood'] > low_boundary) & (df_filled['mood'] < high_boundary), 'mood_level'] = 'medium'
+    df_filled.loc[df_filled['mood'] >= high_boundary, 'mood_level'] = 'high' 
+    
     folder_name ="time_resampling"
     current_directory = os.getcwd()
     folder_path = os.path.join(current_directory, folder_name)
@@ -141,5 +167,6 @@ def add_mood_level(df):
         os.makedirs(folder_path)
     csv_file_name = 'time_resamping_with_moodlevel.csv'
     csv_file_path = os.path.join(folder_path, csv_file_name)
-    df.to_csv(csv_file_path, index=False)
+    df_filled.reset_index().to_csv(csv_file_path, index=False)
+    
     
